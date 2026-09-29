@@ -45,15 +45,16 @@ db.exec(`
   );
 
 
-    CREATE TABLE IF NOT EXISTS users (
+  CREATE TABLE IF NOT EXISTS users (
 
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     name          TEXT NOT NULL,
     email         TEXT NOT NULL UNIQUE,
     password      TEXT NOT NULL,
+    role          TEXT NOT NULL DEFAULT 'user',
     created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 
-  );
+);
 `);
 
 // Add OMDb fields to reviews table if they don't already exist
