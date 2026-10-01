@@ -63,8 +63,8 @@ if (count > 0) {
 }
 
 const insert = db.prepare(`
-  INSERT INTO reviews (title, year, genre, director, runtime, rating, blurb, review, verdict, icon, colors, tags, critic, published)
-  VALUES (@title, @year, @genre, @director, @runtime, @rating, @blurb, @review, @verdict, @icon, @colors, @tags, @critic, @published)
+  INSERT INTO reviews (user_id, title, year, genre, director, runtime, rating, blurb, review, verdict, icon, colors, tags, critic, published)
+  VALUES (1, @title, @year, @genre, @director, @runtime, @rating, @blurb, @review, @verdict, @icon, @colors, @tags, @critic, @published)
 `);
 
 const insertMany = db.transaction((rows) => {
