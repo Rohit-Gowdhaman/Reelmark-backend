@@ -4,6 +4,33 @@
 // Safe to re-run — it skips seeding if rows already exist.
 
 const db = require('./db');
+const bcrypt = require('bcryptjs');
+
+// ── Admin account ──────────────────────────────────────────────
+// Because the database can be reset on hosts like Render's free plan,
+// the admin is created (or promoted) from environment variables on every
+// start. Set ADMIN_EMAIL and ADMIN_PASSWORD (optionally ADMIN_NAME).
+let adminId = 1;
+const adminEmail = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+const adminPassword = process.env.ADMIN_PASSWORD || '';
+
+if (adminEmail && adminPassword) {
+  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(adminEmail);
+  if (existing) {
+    db.prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(existing.id);
+    adminId = existing.id;
+    console.log(`Admin ready: promoted existing user ${adminEmail}`);
+  } else {
+    const hash = bcrypt.hashSync(adminPassword, 10);
+    const info = db
+      .prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, 'admin')")
+      .run(process.env.ADMIN_NAME || 'Admin', adminEmail, hash);
+    adminId = Number(info.lastInsertRowid);
+    console.log(`Admin ready: created ${adminEmail}`);
+  }
+} else {
+  console.log('ADMIN_EMAIL / ADMIN_PASSWORD not set — skipping admin setup.');
+}
 
 const REVIEWS = [
   { title:"The Glass Orchard", year:2024, genre:"Drama", director:"Mira Kess", runtime:118, rating:4.5,
@@ -64,12 +91,12 @@ if (count > 0) {
 
 const insert = db.prepare(`
   INSERT INTO reviews (user_id, title, year, genre, director, runtime, rating, blurb, review, verdict, icon, colors, tags, critic, published)
-  VALUES (1, @title, @year, @genre, @director, @runtime, @rating, @blurb, @review, @verdict, @icon, @colors, @tags, @critic, @published)
+  VALUES (@user_id, @title, @year, @genre, @director, @runtime, @rating, @blurb, @review, @verdict, @icon, @colors, @tags, @critic, @published)
 `);
 
 const insertMany = db.transaction((rows) => {
   for (const r of rows) {
-    insert.run({ ...r, colors: JSON.stringify(r.colors), tags: JSON.stringify(r.tags) });
+    insert.run({ ...r, user_id: adminId, colors: JSON.stringify(r.colors), tags: JSON.stringify(r.tags) });
   }
 });
 
