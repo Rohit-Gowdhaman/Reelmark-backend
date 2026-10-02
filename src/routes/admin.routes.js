@@ -10,7 +10,7 @@ router.get(
     '/test',
     authMiddleware,
     adminMiddleware,
-    (req, res) => {
+    async (req, res) => {
 
         res.json({
             message: 'Welcome Admin! You have admin access.',
@@ -25,11 +25,11 @@ router.get(
     '/users',
     authMiddleware,
     adminMiddleware,
-    (req, res) => {
+    async (req, res) => {
 
         try {
 
-            const users = db.prepare(`
+            const users = await db.prepare(`
                 SELECT
                     id,
                     name,
@@ -60,7 +60,7 @@ router.put(
     '/users/:id/role',
     authMiddleware,
     adminMiddleware,
-    (req, res) => {
+    async (req, res) => {
 
         try {
 
@@ -89,7 +89,7 @@ router.put(
 
 
             // Check if user exists
-            const existingUser = db.prepare(
+            const existingUser = await db.prepare(
                 'SELECT id, name, email, role FROM users WHERE id = ?'
             ).get(userId);
 
@@ -104,13 +104,13 @@ router.put(
 
 
             // Update role
-            db.prepare(
+            await db.prepare(
                 'UPDATE users SET role = ? WHERE id = ?'
             ).run(role, userId);
 
 
             // Get updated user
-            const updatedUser = db.prepare(`
+            const updatedUser = await db.prepare(`
                 SELECT
                     id,
                     name,
@@ -156,11 +156,11 @@ router.get(
     '/reviews',
     authMiddleware,
     adminMiddleware,
-    (req, res) => {
+    async (req, res) => {
 
         try {
 
-            const reviews = db.prepare(`
+            const reviews = await db.prepare(`
                 SELECT
                     reviews.id,
                     reviews.user_id,
@@ -220,7 +220,7 @@ router.put(
     '/reviews/:id',
     authMiddleware,
     adminMiddleware,
-    (req, res) => {
+    async (req, res) => {
 
         try {
 
@@ -280,7 +280,7 @@ router.put(
             // ======================================
 
             const existingReview =
-                db.prepare(`
+                await db.prepare(`
                     SELECT
                         id,
                         user_id
@@ -302,7 +302,7 @@ router.put(
             // UPDATE REVIEW
             // ======================================
 
-            db.prepare(`
+            await db.prepare(`
                 UPDATE reviews
                 SET
                     title = ?,
@@ -344,7 +344,7 @@ router.put(
             // ======================================
 
             const updatedReview =
-                db.prepare(`
+                await db.prepare(`
                     SELECT
                         reviews.id,
                         reviews.user_id,
@@ -416,7 +416,7 @@ router.delete(
     '/reviews/:id',
     authMiddleware,
     adminMiddleware,
-    (req, res) => {
+    async (req, res) => {
 
         try {
 
@@ -427,7 +427,7 @@ router.delete(
             // Check whether review exists
 
             const existingReview =
-                db.prepare(`
+                await db.prepare(`
                     SELECT
                         id,
                         title,
@@ -448,7 +448,7 @@ router.delete(
 
             // Delete review
 
-            db.prepare(`
+            await db.prepare(`
                 DELETE FROM reviews
                 WHERE id = ?
             `).run(reviewId);
@@ -494,7 +494,7 @@ router.get(
     '/analytics',
     authMiddleware,
     adminMiddleware,
-    (req, res) => {
+    async (req, res) => {
 
         try {
 
@@ -503,10 +503,10 @@ router.get(
             // ==================================
 
             const totalUsers =
-                db.prepare(`
+                (await db.prepare(`
                     SELECT COUNT(*) AS count
                     FROM users
-                `).get().count;
+                `).get()).count;
 
 
             // ==================================
@@ -514,11 +514,11 @@ router.get(
             // ==================================
 
             const totalAdmins =
-                db.prepare(`
+                (await db.prepare(`
                     SELECT COUNT(*) AS count
                     FROM users
                     WHERE role = 'admin'
-                `).get().count;
+                `).get()).count;
 
 
             // ==================================
@@ -526,11 +526,11 @@ router.get(
             // ==================================
 
             const totalNormalUsers =
-                db.prepare(`
+                (await db.prepare(`
                     SELECT COUNT(*) AS count
                     FROM users
                     WHERE role = 'user'
-                `).get().count;
+                `).get()).count;
 
 
             // ==================================
@@ -538,10 +538,10 @@ router.get(
             // ==================================
 
             const totalReviews =
-                db.prepare(`
+                (await db.prepare(`
                     SELECT COUNT(*) AS count
                     FROM reviews
-                `).get().count;
+                `).get()).count;
 
 
             // ==================================
@@ -549,11 +549,11 @@ router.get(
             // ==================================
 
             const averageRating =
-                db.prepare(`
+                (await db.prepare(`
                     SELECT
                         AVG(rating) AS average
                     FROM reviews
-                `).get().average;
+                `).get()).average;
 
 
             // ==================================
@@ -561,7 +561,7 @@ router.get(
             // ==================================
 
             const reviewsByGenre =
-                db.prepare(`
+                await db.prepare(`
                     SELECT
                         genre,
                         COUNT(*) AS count
@@ -576,7 +576,7 @@ router.get(
             // ==================================
 
             const reviewsByYear =
-                db.prepare(`
+                await db.prepare(`
                     SELECT
                         year,
                         COUNT(*) AS count
@@ -686,7 +686,7 @@ router.delete(
     '/users/:id',
     authMiddleware,
     adminMiddleware,
-    (req, res) => {
+    async (req, res) => {
 
         try {
 
@@ -706,7 +706,7 @@ router.delete(
 
             // Check if user exists
             const existingUser =
-                db.prepare(`
+                await db.prepare(`
                     SELECT id, name, email, role
                     FROM users
                     WHERE id = ?
@@ -723,7 +723,7 @@ router.delete(
 
 
             // Delete user
-            db.prepare(
+            await db.prepare(
                 'DELETE FROM users WHERE id = ?'
             ).run(userId);
 
@@ -834,7 +834,7 @@ router.post(
             // INSERT REVIEW
             // ======================================
 
-            const result = db.prepare(`
+            const result = await db.prepare(`
                 INSERT INTO reviews (
                     user_id,
                     title,
@@ -898,7 +898,7 @@ router.post(
             // GET CREATED REVIEW
             // ======================================
 
-            const createdReview = db.prepare(`
+            const createdReview = await db.prepare(`
                 SELECT *
                 FROM reviews
                 WHERE id = ?
@@ -938,7 +938,7 @@ router.post(
 
 router.post('/update-existing-posters', authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    const reviews = db.prepare(`
+    const reviews = await db.prepare(`
       SELECT id, title, year, poster
       FROM reviews
       WHERE poster IS NULL OR poster = ''
@@ -958,7 +958,7 @@ router.post('/update-existing-posters', authMiddleware, adminMiddleware, async (
         const movie = await searchMovie(review.title, review.year);
 
         if (movie && movie.poster) {
-          updatePoster.run(
+          await updatePoster.run(
             movie.poster,
             movie.imdbId || null,
             review.id
@@ -1069,7 +1069,7 @@ router.post('/replace-placeholder-movies', authMiddleware, adminMiddleware, asyn
         continue;
       }
 
-      updateMovie.run(
+      await updateMovie.run(
         movie.title || replacement.title,
         Number(movie.year) || replacement.year,
         movie.genre || 'Unknown',
@@ -1129,7 +1129,7 @@ router.post('/replace-one-movie', authMiddleware, adminMiddleware, async (req, r
       });
     }
 
-    const result = db.prepare(`
+    const result = await db.prepare(`
       UPDATE reviews
       SET
         title = ?,

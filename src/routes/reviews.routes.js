@@ -31,11 +31,11 @@ function rowToReview(row) {
 // GET ALL REVIEWS
 // ==========================================================
 
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
 
   try {
 
-    const rows = db.prepare(`
+    const rows = await db.prepare(`
       SELECT *
       FROM reviews
       ORDER BY created_at DESC
@@ -68,11 +68,11 @@ router.get('/', (req, res) => {
 router.get(
   '/my',
   authMiddleware,
-  (req, res) => {
+  async (req, res) => {
 
     try {
 
-      const rows = db.prepare(`
+      const rows = await db.prepare(`
         SELECT *
         FROM reviews
         WHERE user_id = ?
@@ -178,7 +178,7 @@ router.get(
 router.post(
   '/',
   authMiddleware,
-  (req, res) => {
+  async (req, res) => {
 
     try {
 
@@ -225,7 +225,7 @@ router.post(
       // ----------------------------------------------------
 
       const result =
-        db.prepare(`
+        await db.prepare(`
           INSERT INTO reviews (
             title,
             year,
@@ -308,7 +308,7 @@ router.post(
       // ----------------------------------------------------
 
       const createdReview =
-        db.prepare(`
+        await db.prepare(`
           SELECT *
           FROM reviews
           WHERE id = ?
@@ -377,7 +377,7 @@ router.post(
 router.delete(
   '/:id',
   authMiddleware,
-  (req, res) => {
+  async (req, res) => {
 
     try {
 
@@ -386,7 +386,7 @@ router.delete(
 
 
       const review =
-        db.prepare(`
+        await db.prepare(`
           SELECT *
           FROM reviews
           WHERE id = ?
@@ -418,7 +418,7 @@ router.delete(
       }
 
 
-      db.prepare(`
+      await db.prepare(`
         DELETE FROM reviews
         WHERE id = ?
       `).run(id);
@@ -454,7 +454,7 @@ router.delete(
 router.put(
   '/:id',
   authMiddleware,
-  (req, res) => {
+  async (req, res) => {
 
     try {
 
@@ -463,7 +463,7 @@ router.put(
 
 
       const existing =
-        db.prepare(`
+        await db.prepare(`
           SELECT *
           FROM reviews
           WHERE id = ?
@@ -520,7 +520,7 @@ router.put(
       // UPDATE
       // ----------------------------------------------------
 
-      db.prepare(`
+      await db.prepare(`
         UPDATE reviews
         SET
           title = ?,
@@ -606,7 +606,7 @@ router.put(
       // ----------------------------------------------------
 
       const updatedReview =
-        db.prepare(`
+        await db.prepare(`
           SELECT *
           FROM reviews
           WHERE id = ?
@@ -653,7 +653,7 @@ router.put(
 
 router.get(
   '/:id',
-  (req, res) => {
+  async (req, res) => {
 
     try {
 
@@ -662,7 +662,7 @@ router.get(
 
 
       const row =
-        db.prepare(`
+        await db.prepare(`
           SELECT *
           FROM reviews
           WHERE id = ?

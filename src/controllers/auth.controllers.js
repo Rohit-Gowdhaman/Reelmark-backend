@@ -2,7 +2,7 @@ const db = require('../db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const register = (req, res) => {
+const register = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
@@ -14,7 +14,7 @@ const register = (req, res) => {
         }
 
         // 2. Check if email already exists
-        const existingUser = db
+        const existingUser = await db
             .prepare('SELECT id FROM users WHERE email = ?')
             .get(email);
 
@@ -28,7 +28,7 @@ const register = (req, res) => {
         const hashedPassword = bcrypt.hashSync(password, 10);
 
         // 4. Insert user into database
-        const result = db.prepare(`
+        const result = await db.prepare(`
             INSERT INTO users (name, email, password)
             VALUES (?, ?, ?)
         `).run(name, email, hashedPassword);
@@ -44,6 +44,13 @@ const register = (req, res) => {
         });
 
     } catch (error) {
+        // Two people registering the same email at the same moment
+        if (error.code === '23505') {
+            return res.status(409).json({
+                error: 'Email already registered'
+            });
+        }
+
         console.error('Register error:', error);
 
         res.status(500).json({
@@ -53,7 +60,7 @@ const register = (req, res) => {
 };
 
 // LOGIN
-const login = (req, res) => {
+const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -65,7 +72,7 @@ const login = (req, res) => {
         }
 
         // 2. Find user by email
-        const user = db
+        const user = await db
             .prepare('SELECT * FROM users WHERE email = ?')
             .get(email);
 
