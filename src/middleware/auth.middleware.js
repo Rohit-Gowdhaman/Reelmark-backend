@@ -1,51 +1,42 @@
-const db = require('../db');
+const jwt = require('jsonwebtoken');
 
-const adminMiddleware = async (req, res, next) => {
-
-    // Check if user is logged in
-    if (!req.user) {
-        return res.status(401).json({
-            error: 'Authentication required'
-        });
-    }
-
+const authMiddleware = (req, res, next) => {
     try {
+        // Get Authorization header
+        const authHeader = req.headers.authorization;
 
-        // Get the user's current role from the database
-        const user = await db.prepare(`
-            SELECT id, role
-            FROM users
-            WHERE id = ?
-        `).get(req.user.id);
-
-        // User no longer exists
-        if (!user) {
+        if (!authHeader) {
             return res.status(401).json({
-                error: 'User account not found'
+                error: 'Access denied. No token provided'
             });
         }
 
-        // Check the CURRENT database role
-        if (user.role !== 'admin') {
-            return res.status(403).json({
-                error: 'Admin access required'
+        // Check Bearer token
+        const token = authHeader.split(' ')[1];
+
+        if (!token) {
+            return res.status(401).json({
+                error: 'Access denied. Invalid token format'
             });
         }
 
-        // User is currently an admin
+        // Verify JWT
+        const decoded = jwt.verify(
+            token,
+            process.env.JWT_SECRET
+        );
+
+        // Store user information in request
+        req.user = decoded;
+
+        // Continue to the next function
         next();
 
     } catch (error) {
-
-        console.error(
-            'Admin authorization error:',
-            error
-        );
-
-        return res.status(500).json({
-            error: 'Authorization check failed'
+        return res.status(401).json({
+            error: 'Invalid or expired token'
         });
     }
 };
 
-module.exports = adminMiddleware;
+module.exports = authMiddleware;
