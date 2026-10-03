@@ -1,6 +1,6 @@
 const db = require('../db');
 
-const adminMiddleware = (req, res, next) => {
+const adminMiddleware = async (req, res, next) => {
 
     // Check if user is logged in
     if (!req.user) {
@@ -12,7 +12,7 @@ const adminMiddleware = (req, res, next) => {
     try {
 
         // Get the user's current role from the database
-        const user = db.prepare(`
+        const user = await db.prepare(`
             SELECT id, role
             FROM users
             WHERE id = ?
